@@ -43,7 +43,7 @@ def addRandom(gamefield):
 def move(direction,gamefield):
 	print(direction)
 	tmpfield = gamefield.copy()
-	if(direction=='w'):
+	if(direction=='e'):
 		#flip y
 		for i in range(SIZE):
 			for j in range(SIZE):
@@ -63,10 +63,10 @@ def move(direction,gamefield):
 			val = tmpfield[i][j]
 			if(val!=0):
 				gone = False
+				stay = False
 				if(i>0):
 					if(lastOccupied[j]==-1):
-						tmpfield[lastOccupied[j]+1][j] = val
-						tmpfield[i][j] = 0
+						tmpfield[0][j] = val
 					elif(i-lastOccupied[j]>=1):
 						val2 = tmpfield[lastOccupied[j]][j]
 						if val2==val:
@@ -74,13 +74,15 @@ def move(direction,gamefield):
 							tmpfield[lastOccupied[j]][j] = val*2
 						else:
 							tmpfield[lastOccupied[j]+1][j] = val
-						if(i-lastOccupied[j]>1):
-							tmpfield[i][j] = 0
+							if(i-lastOccupied[j]==1):
+								stay = True
 				if not gone:
 					lastOccupied[j] +=1
+				if not stay:
+					tmpfield[i][j] = 0
 	
 	newgamefield = tmpfield.copy()
-	if(direction=='w'):
+	if(direction=='e'):
 		#flip y
 		for i in range(SIZE):
 			for j in range(SIZE):
@@ -94,6 +96,8 @@ def move(direction,gamefield):
 		#flip x,y
 		newgamefield = tmpfield.T.copy()
 	printGF(newgamefield)
+	plotGF(newgamefield)
+
 		
 def step(gamefield):
 	move('s',gamefield)
@@ -108,6 +112,10 @@ if __name__ == '__main__':
 	addRandom(gamefield)
 	addRandom(gamefield)
 	addRandom(gamefield)
+	addRandom(gamefield)
+	addRandom(gamefield)
+	addRandom(gamefield)
+	addRandom(gamefield)
+	plotGF(gamefield)
 	printGF(gamefield)
 	step(gamefield)
-
