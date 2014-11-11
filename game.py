@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib as ml
 import matplotlib.pyplot as plt
 import random
+import os
 
 SIZE = 4
 
@@ -35,7 +36,7 @@ def addRandom(gamefield):
 	#print(possPos)
 	if(len(possPos)>0):
 		posToChange = possPos[int(random.random()*len(possPos))]
-		print(posToChange)
+		#print(posToChange)
 		gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.5 else 4
 	else:
 		print("ALL NODES ARE OCCUPIED!")
@@ -43,71 +44,73 @@ def addRandom(gamefield):
 def move(direction,gamefield):
 	print(direction)
 	tmpfield = gamefield.copy()
-	if(direction=='w'):
+	if(direction=='s'):
 		#flip y
 		for i in range(SIZE):
 			for j in range(SIZE):
-				tmpfield[SIZE-i-1][j] = gamefield[i][j]
-	elif(direction=='s'):
+				tmpfield[i][SIZE-j-1] = gamefield[i][j]
+	elif(direction=='e'):
 		#flip x,y
 		for i in range(SIZE):
 			for j in range(SIZE):
 				tmpfield[SIZE-i-1][SIZE-j-1] = gamefield.T[i][j]
-	elif(direction=='n'):
+	elif(direction=='w'):
 		#flip x,y
 		tmpfield = gamefield.T.copy()
 	
-	lastOccupied = [-1 for i in range(SIZE)]
-	for i in range(0,SIZE):
-		for j in range(SIZE):
-			val = tmpfield[i][j]
-			if(val!=0):
-				gone = False
-				if(i>0):
-					if(lastOccupied[j]==-1):
-						tmpfield[lastOccupied[j]+1][j] = val
-						tmpfield[i][j] = 0
-					elif(i-lastOccupied[j]>=1):
-						val2 = tmpfield[lastOccupied[j]][j]
-						if val2==val:
-							gone = True
-							tmpfield[lastOccupied[j]][j] = val*2
-						else:
-							tmpfield[lastOccupied[j]+1][j] = val
-						if(i-lastOccupied[j]>1):
-							tmpfield[i][j] = 0
-				if not gone:
-					lastOccupied[j] +=1
+	def condense():
+		lastOccupied = [0 for i in range(SIZE)]
+		for i in range(SIZE):
+			for j in range(SIZE):
+				val = tmpfield[i][j]
+				if(val==0):
+					continue
+				tmpfield[i][j] = 0
+				tmpfield[i][lastOccupied[i]] = val
+				lastOccupied[i]+=1
 	
+	condense()
+	for i in range(SIZE):
+		for j in range(SIZE-1):
+			if(tmpfield[i][j]==tmpfield[i][j+1]):
+				tmpfield[i][j]*=2
+				tmpfield[i][j+1]=0
+	condense()
+
 	newgamefield = tmpfield.copy()
-	if(direction=='w'):
+	if(direction=='s'):
 		#flip y
 		for i in range(SIZE):
 			for j in range(SIZE):
-				newgamefield[SIZE-i-1][j] = tmpfield[i][j]
-	elif(direction=='s'):
+				newgamefield[i][SIZE-j-1] = tmpfield[i][j]
+	elif(direction=='e'):
 		#flip x,y
 		for i in range(SIZE):
 			for j in range(SIZE):
 				newgamefield[SIZE-i-1][SIZE-j-1] = tmpfield.T[i][j]
-	elif(direction=='n'):
+	elif(direction=='w'):
 		#flip x,y
 		newgamefield = tmpfield.T.copy()
 	printGF(newgamefield)
-		
+
+def clear():
+	os.system('cls' if os.name=='nt' else 'clear')
+
 def step(gamefield):
 	move('s',gamefield)
 	move('n',gamefield)
+	#clear()
 	move('w',gamefield)
 	move('e',gamefield)
 
 if __name__ == '__main__':
 	gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
 	posfield = [[(j,i) for i in range(SIZE)] for j in range(SIZE)]
-	addRandom(gamefield)
-	addRandom(gamefield)
-	addRandom(gamefield)
-	addRandom(gamefield)
-	printGF(gamefield)
-	step(gamefield)
-
+	for i in range(5):
+		addRandom(gamefield)
+	clear()
+	while(True):
+		printGF(gamefield)
+		step(gamefield)
+		raw_input("asd"+str(random.random()))
+		clear()
