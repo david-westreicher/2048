@@ -2,15 +2,12 @@ import numpy as np
 import random
 import os
 
-SIZE = 4
+SIZE = 2
 
 def printGF(gamefield):
     border ='+' + ''.join([('-') for i in range(SIZE*8-1)]) + '+'
     emptyRow ='|' + ''.join([('|' if i%8==7 else ' ') for i in range(SIZE*8)])
     mid ='|' + ''.join([('|' if i%8==7 else '-') for i in range(SIZE*8)])
-    def printEmptyRow():
-        for k in range(1):
-            print(emptyRow)
     print(border)
     def spacedprINT(n):
         if n==0:
@@ -23,12 +20,12 @@ def printGF(gamefield):
         if digits==3:
             return ' ' + str(n)+ '  '
     for i,row in enumerate(gamefield.T):
-        printEmptyRow()
+        print(emptyRow)
         print('|'),
         for j,el in enumerate(row):
             print(spacedprINT(el)+'|'),
         print('\n'),
-        printEmptyRow()
+        print(emptyRow)
         if i<SIZE-1:
             print(mid)
     print(border) 
@@ -44,8 +41,10 @@ def addRandom(gamefield):
         posToChange = possPos[int(random.random()*len(possPos))]
         #print(posToChange)
         gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.5 else 4
+        return posToChange 
     else:
         print("ALL NODES ARE OCCUPIED!")
+        return None
 
 def move(direction,gamefield):
     if not direction in ['n','s','e','w']:
@@ -114,9 +113,16 @@ def step(gamefield):
     move('w',gamefield)
     move('e',gamefield)
 
+def printGameOver():
+    out = ""
+    goStr = "GAME OVER!"
+    for i in range(SIZE*8/2-len(goStr)/2 + 1):
+        out+=" "
+    print(out+goStr)
+
 if __name__ == '__main__':
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
-    for i in range(5):
+    for i in range(SIZE*SIZE/4):
         addRandom(gamefield)
     m = ' '
     while(True):
@@ -130,8 +136,12 @@ if __name__ == '__main__':
             m='s'
         elif m=='d':
             m='e'
+        gameOver = False
         if m in ['n','s','e','w']:
             move(m,gamefield)
-            addRandom(gamefield)
+            gameOver = True if addRandom(gamefield) is None else False
         printGF(gamefield)
+        if gameOver:
+            printGameOver()
+            break
         m = raw_input("\nmove: ")
