@@ -13,6 +13,8 @@ def printGF(gamefield):
         if n==0:
             return '\033[49m'
         col = int(math.log(n,2))-1
+        if col>=7:
+            col+=1
         return '\033[48;5;'+str(col)+'m'
     def printEmptyRow(rownum):
         row = '|'
@@ -121,7 +123,7 @@ def move(direction,gamefield):
 
 def clear():
     os.system('cls' if os.name=='nt' else 'clear')
-    print(c_WHITE),
+    print('\033[97m'),
 
 def step(gamefield):
     move('s',gamefield)
@@ -135,7 +137,7 @@ def printGameOver():
     for i in range(SIZE*8/2-len(goStr)/2 + 1):
         out+=" "
     print(out+goStr)
-c_WHITE = '\033[97m'
+
 if __name__ == '__main__':
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
     for i in range(SIZE*SIZE/4):
@@ -143,9 +145,7 @@ if __name__ == '__main__':
     m = ' '
     while(True):
         clear()
-        print('Made move: '+m)
-        #for i in range(30,54):
-        #    print('\033['+str(i)+'mBlue')
+        print('\033[4mMade move:\033[24m '+m)
         if m=='w':
             m='n'
         elif m=='a':
