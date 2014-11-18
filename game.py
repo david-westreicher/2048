@@ -1,31 +1,47 @@
 import numpy as np
 import random
 import os
+import math
 
-SIZE = 2
+SIZE = 4
 
 def printGF(gamefield):
     border ='+' + ''.join([('-') for i in range(SIZE*8-1)]) + '+'
-    emptyRow ='|' + ''.join([('|' if i%8==7 else ' ') for i in range(SIZE*8)])
-    mid ='|' + ''.join([('|' if i%8==7 else '-') for i in range(SIZE*8)])
+    mid ='|' + ''.join([('+' if i%8==7 else ' ') for i in range(SIZE*8-1)]) +'|'
     print(border)
+    def getcol(n):
+        if n==0:
+            return '\033[49m'
+        col = int(math.log(n,2))-1
+        return '\033[48;5;'+str(col)+'m'
+    def printEmptyRow(rownum):
+        row = '|'
+        for j,el in enumerate(rownum):
+            row += getcol(el)
+            for i in range(7):
+                row += ' '
+            row += '\033[49m'
+            row += ' ' if j<SIZE-1 else '|'
+        print(row)
     def spacedprINT(n):
         if n==0:
-            return '      '
+            return '       '
+        retStr = getcol(n)
         digits = len(str(n))
-        if digits==1:
-            return '  ' + str(n)+ '   '
-        if digits==2:
-            return ' ' + str(n)+ '   '
-        if digits==3:
-            return ' ' + str(n)+ '  '
+        before = (7-digits)/2
+        for i in range(before):
+            retStr += ' '
+        retStr += str(n)
+        for i in range(7-(before+digits)):
+            retStr += ' '
+        return retStr + '\033[49m'
     for i,row in enumerate(gamefield.T):
-        print(emptyRow)
-        print('|'),
+        printEmptyRow(row)
+        rowstr = '|'
         for j,el in enumerate(row):
-            print(spacedprINT(el)+'|'),
-        print('\n'),
-        print(emptyRow)
+            rowstr += spacedprINT(el)+(' ' if j<SIZE-1 else '|')
+        print(rowstr)
+        printEmptyRow(row)
         if i<SIZE-1:
             print(mid)
     print(border) 
@@ -43,7 +59,6 @@ def addRandom(gamefield):
         gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.5 else 4
         return posToChange 
     else:
-        print("ALL NODES ARE OCCUPIED!")
         return None
 
 def move(direction,gamefield):
@@ -106,6 +121,7 @@ def move(direction,gamefield):
 
 def clear():
     os.system('cls' if os.name=='nt' else 'clear')
+    print(c_WHITE),
 
 def step(gamefield):
     move('s',gamefield)
@@ -119,7 +135,7 @@ def printGameOver():
     for i in range(SIZE*8/2-len(goStr)/2 + 1):
         out+=" "
     print(out+goStr)
-
+c_WHITE = '\033[97m'
 if __name__ == '__main__':
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
     for i in range(SIZE*SIZE/4):
@@ -128,6 +144,8 @@ if __name__ == '__main__':
     while(True):
         clear()
         print('Made move: '+m)
+        #for i in range(30,54):
+        #    print('\033['+str(i)+'mBlue')
         if m=='w':
             m='n'
         elif m=='a':
