@@ -6,6 +6,7 @@ import sys
 import getch
 
 SIZE = 4
+DIRECTIONS = ['n','s','e','w']
 
 def printGF(gamefield):
     border ='+' + ''.join([('-') for i in range(SIZE*8-1)]) + '+'
@@ -60,29 +61,25 @@ def addRandom(gamefield):
     if(len(possPos)>0):
         posToChange = possPos[int(random.random()*len(possPos))]
         gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.5 else 4
-        return posToChange 
-    return None
 
 # returns TRUE iff move did change the gamefield
 def move(direction,gamefield):
-    if not direction in ['n','s','e','w']:
-        #print('Cant move to ' + str(direction))
+    if not direction in DIRECTIONS:
         return False
-    # print(direction)
-    tmpfield = gamefield.copy()
-    if(direction=='s'):
-        #flip y
-        for i in range(SIZE):
-            for j in range(SIZE):
-                tmpfield[i][SIZE-j-1] = gamefield[i][j]
-    elif(direction=='e'):
-        #flip x,y
-        for i in range(SIZE):
-            for j in range(SIZE):
-                tmpfield[SIZE-i-1][SIZE-j-1] = gamefield.T[i][j]
-    elif(direction=='w'):
-        #flip x,y
-        tmpfield = gamefield.T.copy()
+
+    def flip(gf):
+        tmpfield = gf.copy()
+        if(direction=='s'):
+            for i in range(SIZE):
+                for j in range(SIZE):
+                    tmpfield[i][SIZE-j-1] = gf[i][j]
+        elif(direction=='e'):
+            for i in range(SIZE):
+                for j in range(SIZE):
+                    tmpfield[SIZE-i-1][SIZE-j-1] = gf.T[i][j]
+        elif(direction=='w'):
+            tmpfield = gf.T.copy()
+        return tmpfield
     
     def condense():
         lastOccupied = [0 for i in range(SIZE)]
@@ -94,7 +91,8 @@ def move(direction,gamefield):
                 tmpfield[i][j] = 0
                 tmpfield[i][lastOccupied[i]] = val
                 lastOccupied[i]+=1
-    
+
+    tmpfield = flip(gamefield)
     condense()
     for i in range(SIZE):
         for j in range(SIZE-1):
@@ -102,22 +100,8 @@ def move(direction,gamefield):
                 tmpfield[i][j]*=2
                 tmpfield[i][j+1]=0
     condense()
+    newgamefield = flip(tmpfield)
 
-    newgamefield = tmpfield.copy()
-    if(direction=='s'):
-        #flip y
-        for i in range(SIZE):
-            for j in range(SIZE):
-                newgamefield[i][SIZE-j-1] = tmpfield[i][j]
-    elif(direction=='e'):
-        #flip x,y
-        for i in range(SIZE):
-            for j in range(SIZE):
-                newgamefield[SIZE-i-1][SIZE-j-1] = tmpfield.T[i][j]
-    elif(direction=='w'):
-        #flip x,y
-        newgamefield = tmpfield.T.copy()
-    # printGF(newgamefield)
     change = False
     for i,row in enumerate(newgamefield):
         for j,el in enumerate(row):
@@ -164,6 +148,12 @@ def getMove(controls):
         m = getch.getch()
     return controls.get(m,None)
 
+def movePossible(gamefield):
+    for direction in DIRECTIONS:
+        gf = gamefield.copy()
+        if move(direction,gf):
+            return True
+    return False
 
 if __name__ == '__main__':
     controls = setupControls()
@@ -177,6 +167,6 @@ if __name__ == '__main__':
         printGF(gamefield)
         if move(getMove(controls),gamefield):
             addRandom(gamefield)
-        elif isFull(gamefield):
+        elif isFull(gamefield) and not movePossible(gamefield):
             break
     printGameOver()
