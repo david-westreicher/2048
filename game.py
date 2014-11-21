@@ -2,6 +2,8 @@ import numpy as np
 import random
 import os
 import math
+import sys
+import getch
 
 SIZE = 4
 
@@ -63,10 +65,11 @@ def addRandom(gamefield):
     else:
         return None
 
+# returns TRUE iff move did change the gamefield
 def move(direction,gamefield):
     if not direction in ['n','s','e','w']:
-        print('Cant move to ' + direction)
-        return
+        #print('Cant move to ' + str(direction))
+        return False
     # print(direction)
     tmpfield = gamefield.copy()
     if(direction=='s'):
@@ -117,19 +120,17 @@ def move(direction,gamefield):
         #flip x,y
         newgamefield = tmpfield.T.copy()
     # printGF(newgamefield)
+    change = False
     for i,row in enumerate(newgamefield):
         for j,el in enumerate(row):
+            if gamefield[i][j] != newgamefield[i][j]:
+                change = True
             gamefield[i][j] = newgamefield[i][j]
+    return change
 
 def clear():
     os.system('cls' if os.name=='nt' else 'clear')
-    print('\033[97m'),
-
-def step(gamefield):
-    move('s',gamefield)
-    move('n',gamefield)
-    move('w',gamefield)
-    move('e',gamefield)
+    sys.stdout.write('\033[97m')
 
 def printGameOver():
     out = ""
@@ -138,28 +139,45 @@ def printGameOver():
         out+=" "
     print(out+goStr)
 
+def setupControls():
+    dic = {}
+    dic['n'] = ['w', 'A']
+    dic['s'] = ['s', 'B']
+    dic['e'] = ['d', 'C']
+    dic['w'] = ['a', 'D']
+    revDic = {}
+    for el in dic:
+        for c in dic[el]:
+            revDic[c] = el
+    return revDic
+
+def isFull(gf):
+    for row in gf:
+        for el in row:
+            if el==0:
+                return False
+    return True
+
 if __name__ == '__main__':
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
     for i in range(SIZE*SIZE/4):
         addRandom(gamefield)
+    controls = setupControls()
     m = ' '
     while(True):
         clear()
         print('\033[4mMade move:\033[24m '+m)
-        if m=='w':
-            m='n'
-        elif m=='a':
-            m='w'
-        elif m=='s':
-            m='s'
-        elif m=='d':
-            m='e'
-        gameOver = False
-        if m in ['n','s','e','w']:
-            move(m,gamefield)
-            gameOver = True if addRandom(gamefield) is None else False
+        c = controls.get(m,None)
+        if move(c,gamefield):
+            if addRandom(gamefield) is None:
+                break
+        elif isFull(gamefield):
+                break
         printGF(gamefield)
-        if gameOver:
-            printGameOver()
-            break
-        m = raw_input("\nmove: ")
+        print("\nmove:"),
+        m = getch.getch()
+        if m=='\033':
+            m = getch.getch()
+            m = getch.getch()
+    printGF(gamefield)
+    printGameOver()
