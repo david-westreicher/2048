@@ -3,10 +3,31 @@ import random
 import os
 import math
 import sys
-import getch
 
 SIZE = 4
 DIRECTIONS = ['n','s','e','w']
+
+class GetchWrapper(object):
+    def __init__(self):
+        try:
+            import getch
+            self.isReal = True
+            self.getch = getch.getch
+            self.input = self.realgetch
+        except ImportError:
+            self.isReal = False
+            self.input = self.virtualgetch
+
+    def realgetch(self):
+        m = self.getch()
+        if m=='\033':
+            # arrow keys
+            self.getch()
+            m = self.getch()
+        return m
+
+    def virtualgetch(self):
+        return raw_input()
 
 def printGF(gamefield):
     border ='+' + ''.join([('-') for i in range(SIZE*8-1)]) + '+'
@@ -114,12 +135,21 @@ def clear():
     os.system('cls' if os.name=='nt' else 'clear')
     sys.stdout.write('\033[97m')
 
-def printGameOver():
+def prettyPrint(text):
+    while len(text)>SIZE*8:
+        split = text.split(" ")
+        curr = ""
+        i = 0
+        while len(curr+split[i])<SIZE*8:
+            curr += split[i]+" "
+            i += 1
+        prettyPrint(curr)
+        text = " ".join(split[i:])
+
     out = ""
-    goStr = "GAME OVER!"
-    for i in range(SIZE*8/2-len(goStr)/2 + 1):
+    for i in range(SIZE*8/2-len(text)/2 + 1):
         out+=" "
-    print(out+goStr)
+    print(out+text)
 
 def setupControls():
     dic = {}
@@ -140,14 +170,6 @@ def isFull(gf):
                 return False
     return True
 
-def getMove(controls):
-    m = getch.getch()
-    # arrow keys
-    if m=='\033':
-        m = getch.getch()
-        m = getch.getch()
-    return controls.get(m,None)
-
 def movePossible(gamefield):
     for direction in DIRECTIONS:
         gf = gamefield.copy()
@@ -155,18 +177,38 @@ def movePossible(gamefield):
             return True
     return False
 
-if __name__ == '__main__':
-    controls = setupControls()
+def printDescription(hasGetch):
+    prettyPrint('Welcome to 2048!')
+    prettyPrint('You can use W/S/A/D or the arrow keys to shift the blocks into a direction.')
+    prettyPrint('If two blocks with the same number "n" collide, they merge into a new block "n*2"')
+    prettyPrint('Create a block with the number "2048" and you win!')
+    if not hasGetch:
+        print('\n')
+        print('\033[48;5;1mWARNING!\033[49m')
+        print('It seems that you haven\'t installed "getch".')
+        print('Without "getch" you can\'t use the arrow keys')
+        print('and you have to press enter after every move :(')
+        print('Visit "https://pypi.python.org/pypi/getch"')
+        print('download "getch-1.0-python2.tar.gz", untar and')
+        print('enter "sudo python setup.py install"\n')
+    prettyPrint('Enter your move:')
 
+if __name__ == '__main__':
+    getch = GetchWrapper()
+    controls = setupControls()
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
     for i in range(SIZE*SIZE/4):
         addRandom(gamefield)
 
+    firstRun = True
     while(True):
         clear()
         printGF(gamefield)
-        if move(getMove(controls),gamefield):
+        if firstRun:
+            printDescription(getch.isReal)
+            firstRun = False
+        if move(controls.get(getch.input(),None),gamefield):
             addRandom(gamefield)
         elif isFull(gamefield) and not movePossible(gamefield):
             break
-    printGameOver()
+    prettyPrint('GAME OVER!')
