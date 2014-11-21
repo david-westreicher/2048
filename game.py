@@ -60,7 +60,7 @@ def addRandom(gamefield):
                 possPos.append([i,j])
     if(len(possPos)>0):
         posToChange = possPos[int(random.random()*len(possPos))]
-        gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.5 else 4
+        gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.1 else 4
 
 # returns TRUE iff move did change the gamefield
 def move(direction,gamefield):
