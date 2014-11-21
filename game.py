@@ -10,7 +10,6 @@ SIZE = 4
 def printGF(gamefield):
     border ='+' + ''.join([('-') for i in range(SIZE*8-1)]) + '+'
     mid ='|' + ''.join([('+' if i%8==7 else ' ') for i in range(SIZE*8-1)]) +'|'
-    print(border)
     def getcol(n):
         if n==0:
             return '\033[49m'
@@ -39,6 +38,8 @@ def printGF(gamefield):
         for i in range(7-(before+digits)):
             retStr += ' '
         return retStr + '\033[49m'
+
+    print(border)
     for i,row in enumerate(gamefield.T):
         printEmptyRow(row)
         rowstr = '|'
@@ -56,14 +57,11 @@ def addRandom(gamefield):
         for j,el in enumerate(row):
             if el == 0:
                 possPos.append([i,j])
-    #print(possPos)
     if(len(possPos)>0):
         posToChange = possPos[int(random.random()*len(possPos))]
-        #print(posToChange)
         gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.5 else 4
         return posToChange 
-    else:
-        return None
+    return None
 
 # returns TRUE iff move did change the gamefield
 def move(direction,gamefield):
@@ -158,26 +156,27 @@ def isFull(gf):
                 return False
     return True
 
+def getMove(controls):
+    m = getch.getch()
+    # arrow keys
+    if m=='\033':
+        m = getch.getch()
+        m = getch.getch()
+    return controls.get(m,None)
+
+
 if __name__ == '__main__':
+    controls = setupControls()
+
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
     for i in range(SIZE*SIZE/4):
         addRandom(gamefield)
-    controls = setupControls()
-    m = ' '
+
     while(True):
         clear()
-        print('\033[4mMade move:\033[24m '+m)
-        c = controls.get(m,None)
-        if move(c,gamefield):
-            if addRandom(gamefield) is None:
-                break
-        elif isFull(gamefield):
-                break
         printGF(gamefield)
-        print("\nmove:"),
-        m = getch.getch()
-        if m=='\033':
-            m = getch.getch()
-            m = getch.getch()
-    printGF(gamefield)
+        if move(getMove(controls),gamefield):
+            addRandom(gamefield)
+        elif isFull(gamefield):
+            break
     printGameOver()
