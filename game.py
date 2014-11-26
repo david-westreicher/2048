@@ -185,6 +185,8 @@ def printDescription(hasGetch):
     prettyPrint('You can use W/S/A/D or the arrow keys to shift the blocks into a direction.')
     prettyPrint('If two blocks with the same number "n" collide, they merge into a new block "n*2"')
     prettyPrint('Create a block with the number "2048" and you win!')
+    print('\n')
+    prettyPrint('Press \'Q\' or ESC twice to exit. ')
     if not hasGetch:
         print('\n')
         print('\033[48;5;1mWARNING!\033[49m')
@@ -194,6 +196,7 @@ def printDescription(hasGetch):
         print('Visit "https://pypi.python.org/pypi/getch"')
         print('download "getch-1.0-python2.tar.gz", untar and')
         print('enter "sudo python setup.py install"\n')
+    print('\n')
     prettyPrint('Enter your move:')
 
 if __name__ == '__main__':
