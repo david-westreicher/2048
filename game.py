@@ -21,8 +21,10 @@ class GetchWrapper(object):
     def realgetch(self):
         m = self.getch()
         if m=='\033':
-            # arrow keys
-            self.getch()
+            # special keys
+            if self.getch()=='\033':
+                # ESC key
+                return m
             m = self.getch()
         return m
 
@@ -157,6 +159,7 @@ def setupControls():
     dic['s'] = ['s', 'B']
     dic['e'] = ['d', 'C']
     dic['w'] = ['a', 'D']
+    dic['exit'] = ['q', 'Q', '\033']
     revDic = {}
     for el in dic:
         for c in dic[el]:
@@ -207,8 +210,9 @@ if __name__ == '__main__':
         if firstRun:
             printDescription(getch.isReal)
             firstRun = False
-        if move(controls.get(getch.input(),None),gamefield):
+        m = controls.get(getch.input(),None)
+        if move(m,gamefield):
             addRandom(gamefield)
-        elif isFull(gamefield) and not movePossible(gamefield):
+        elif (isFull(gamefield) and not movePossible(gamefield)) or m=='exit':
             break
     prettyPrint('GAME OVER!')
