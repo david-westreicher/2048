@@ -199,23 +199,38 @@ def printDescription(hasGetch):
     print('\n')
     prettyPrint('Enter your move:')
 
+def ai(gamefield,step):
+    for direction in (["w","s","n","e"] if step%2==1 else ["s","w","n","e"]):
+    #for direction in (["w","s","n","e"] if random.random()>0.5 else ["s","w","n","e"]):
+        gf = gamefield.copy()
+        if move(direction,gf):
+            return direction
+    return "exit"
+
 if __name__ == '__main__':
+    hasAI = True if len(sys.argv)>1 else False
+
     getch = GetchWrapper()
     controls = setupControls()
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
     for i in range(SIZE*SIZE/4):
         addRandom(gamefield)
 
-    firstRun = True
+    step = 0
     while(True):
         clear()
         printGF(gamefield)
-        if firstRun:
+        if step==0:
             printDescription(getch.isReal)
-            firstRun = False
-        m = controls.get(getch.input(),None)
+        step+=1
+        if hasAI:
+            m = ai(gamefield,step)
+        else:
+            m = controls.get(getch.input(),None)
         if move(m,gamefield):
             addRandom(gamefield)
         elif (isFull(gamefield) and not movePossible(gamefield)) or m=='exit':
             break
     prettyPrint('GAME OVER!')
+    if hasAI:
+        prettyPrint(str(step)+" steps")
