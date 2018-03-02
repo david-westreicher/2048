@@ -155,10 +155,10 @@ def prettyPrint(text):
 
 def setupControls():
     dic = {}
-    dic['n'] = ['w', 'A']
-    dic['s'] = ['s', 'B']
-    dic['e'] = ['d', 'C']
-    dic['w'] = ['a', 'D']
+    dic['n'] = ['w', 'A', 'k']
+    dic['s'] = ['s', 'B', 'j']
+    dic['e'] = ['d', 'C', 'l']
+    dic['w'] = ['a', 'D', 'h']
     dic['exit'] = ['q', 'Q', '\033']
     revDic = {}
     for el in dic:
