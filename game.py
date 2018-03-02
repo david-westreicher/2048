@@ -55,7 +55,7 @@ def printGF(gamefield):
             return '       '
         retStr = getcol(n)
         digits = len(str(n))
-        before = (7-digits)/2
+        before = (7-digits)//2
         for i in range(before):
             retStr += ' '
         retStr += str(n)
@@ -149,7 +149,7 @@ def prettyPrint(text):
         text = " ".join(split[i:])
 
     out = ""
-    for i in range(SIZE*8/2-len(text)/2 + 1):
+    for i in range(SIZE*8//2-len(text)//2 + 1):
         out+=" "
     print(out+text)
 
@@ -213,7 +213,7 @@ if __name__ == '__main__':
     getch = GetchWrapper()
     controls = setupControls()
     gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
-    for i in range(SIZE*SIZE/4):
+    for i in range(SIZE*SIZE//4):
         addRandom(gamefield)
 
     step = 0
