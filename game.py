@@ -3,9 +3,10 @@ import random
 import os
 import math
 import sys
+import time
 
 SIZE = 4
-DIRECTIONS = ['n','s','e','w']
+DIRECTIONS = ['u', 'd', 'l', 'r']
 
 class GetchWrapper(object):
     def __init__(self):
@@ -20,145 +21,148 @@ class GetchWrapper(object):
 
     def realgetch(self):
         m = self.getch()
-        if m=='\033':
+        if m == '\033':
             # special keys
-            if self.getch()=='\033':
+            if self.getch() == '\033':
                 # ESC key
                 return m
             m = self.getch()
         return m
 
     def virtualgetch(self):
-        return raw_input()
+        return input()
 
 def printGF(gamefield):
-    border ='+' + ''.join([('-') for i in range(SIZE*8-1)]) + '+'
-    mid ='|' + ''.join([('+' if i%8==7 else ' ') for i in range(SIZE*8-1)]) +'|'
+    border = '+' + ''.join([('-') for i in range(SIZE * 8 - 1)]) + '+'
+    mid = '|' + ''.join([('+' if i % 8 == 7 else ' ') for i in range(SIZE * 8 - 1)]) + '|'
+
     def getcol(n):
-        if n==0:
+        if n == 0:
             return '\033[49m'
-        col = int(math.log(n,2))-1
-        if col>=7:
-            col+=1
-        return '\033[48;5;'+str(col)+'m'
+        col = int(math.log(n, 2)) - 1
+        if col >= 7:
+            col += 1
+        return '\033[48;5;' + str(col) + 'm'
+
     def printEmptyRow(rownum):
         row = '|'
-        for j,el in enumerate(rownum):
+        for j, el in enumerate(rownum):
             row += getcol(el)
             for i in range(7):
                 row += ' '
             row += '\033[49m'
-            row += ' ' if j<SIZE-1 else '|'
+            row += ' ' if j < SIZE - 1 else '|'
         print(row)
+
     def spacedprINT(n):
-        if n==0:
+        if n == 0:
             return '       '
         retStr = getcol(n)
         digits = len(str(n))
-        before = (7-digits)//2
+        before = (7 - digits) // 2
         for i in range(before):
             retStr += ' '
         retStr += str(n)
-        for i in range(7-(before+digits)):
+        for i in range(7 - (before + digits)):
             retStr += ' '
         return retStr + '\033[49m'
 
     print(border)
-    for i,row in enumerate(gamefield.T):
+    for i, row in enumerate(gamefield.T):
         printEmptyRow(row)
         rowstr = '|'
-        for j,el in enumerate(row):
-            rowstr += spacedprINT(el)+(' ' if j<SIZE-1 else '|')
+        for j, el in enumerate(row):
+            rowstr += spacedprINT(el) + (' ' if j < SIZE - 1 else '|')
         print(rowstr)
         printEmptyRow(row)
-        if i<SIZE-1:
+        if i < SIZE - 1:
             print(mid)
-    print(border) 
-    
+    print(border)
+
 def addRandom(gamefield):
     possPos = []
-    for i,row in enumerate(gamefield):
-        for j,el in enumerate(row):
+    for i, row in enumerate(gamefield):
+        for j, el in enumerate(row):
             if el == 0:
-                possPos.append([i,j])
-    if(len(possPos)>0):
-        posToChange = possPos[int(random.random()*len(possPos))]
-        gamefield[posToChange[0]][posToChange[1]] = 2 if random.random()>0.1 else 4
+                possPos.append([i, j])
+    if(len(possPos) > 0):
+        posToChange = possPos[int(random.random() * len(possPos))]
+        gamefield[posToChange[0]][posToChange[1]] = 2 if random.random() > 0.1 else 4
 
 # returns TRUE iff move did change the gamefield
-def move(direction,gamefield):
-    if not direction in DIRECTIONS:
+def move(direction, gamefield):
+    if direction not in DIRECTIONS:
         return False
 
     def flip(gf):
         tmpfield = gf.copy()
-        if(direction=='s'):
+        if(direction == 'd'):
             for i in range(SIZE):
                 for j in range(SIZE):
-                    tmpfield[i][SIZE-j-1] = gf[i][j]
-        elif(direction=='e'):
+                    tmpfield[i][SIZE - j - 1] = gf[i][j]
+        elif(direction == 'l'):
             for i in range(SIZE):
                 for j in range(SIZE):
-                    tmpfield[SIZE-i-1][SIZE-j-1] = gf.T[i][j]
-        elif(direction=='w'):
+                    tmpfield[SIZE - i - 1][SIZE - j - 1] = gf.T[i][j]
+        elif(direction == 'r'):
             tmpfield = gf.T.copy()
         return tmpfield
-    
+
     def condense():
         lastOccupied = [0 for i in range(SIZE)]
         for i in range(SIZE):
             for j in range(SIZE):
                 val = tmpfield[i][j]
-                if(val==0):
+                if(val == 0):
                     continue
                 tmpfield[i][j] = 0
                 tmpfield[i][lastOccupied[i]] = val
-                lastOccupied[i]+=1
+                lastOccupied[i] += 1
 
     tmpfield = flip(gamefield)
     condense()
     for i in range(SIZE):
-        for j in range(SIZE-1):
-            if(tmpfield[i][j]==tmpfield[i][j+1]):
-                tmpfield[i][j]*=2
-                tmpfield[i][j+1]=0
+        for j in range(SIZE - 1):
+            if(tmpfield[i][j] == tmpfield[i][j + 1]):
+                tmpfield[i][j] *= 2
+                tmpfield[i][j + 1] = 0
     condense()
     newgamefield = flip(tmpfield)
 
     change = False
-    for i,row in enumerate(newgamefield):
-        for j,el in enumerate(row):
+    for i, row in enumerate(newgamefield):
+        for j, el in enumerate(row):
             if gamefield[i][j] != newgamefield[i][j]:
                 change = True
             gamefield[i][j] = newgamefield[i][j]
     return change
 
 def clear():
-    os.system('cls' if os.name=='nt' else 'clear')
+    os.system('cls' if os.name == 'nt' else 'clear')
     sys.stdout.write('\033[97m')
 
 def prettyPrint(text):
-    while len(text)>SIZE*8:
-        split = text.split(" ")
-        curr = ""
+    while len(text) > SIZE * 8:
+        split = text.split(' ')
+        curr = ''
         i = 0
-        while len(curr+split[i])<SIZE*8:
-            curr += split[i]+" "
+        while len(curr + split[i]) < SIZE * 8:
+            curr += split[i] + ' '
             i += 1
         prettyPrint(curr)
-        text = " ".join(split[i:])
+        text = ' '.join(split[i:])
 
-    out = ""
-    for i in range(SIZE*8//2-len(text)//2 + 1):
-        out+=" "
-    print(out+text)
+    out = ''
+    for i in range(SIZE * 8 // 2 - len(text) // 2 + 1):
+        out += ' '
+    print(out + text)
 
 def setupControls():
     dic = {}
-    dic['n'] = ['w', 'A', 'k']
-    dic['s'] = ['s', 'B', 'j']
-    dic['e'] = ['d', 'C', 'l']
-    dic['w'] = ['a', 'D', 'h']
+    dic['u'] = ['r', 'A', 'k']
+    dic['d'] = ['d', 'B', 'j']
+    dic['l'] = ['d', 'C', 'l']
+    dic['r'] = ['a', 'D', 'h']
     dic['exit'] = ['q', 'Q', '\033']
     revDic = {}
     for el in dic:
@@ -169,14 +173,14 @@ def setupControls():
 def isFull(gf):
     for row in gf:
         for el in row:
-            if el==0:
+            if el == 0:
                 return False
     return True
 
 def movePossible(gamefield):
     for direction in DIRECTIONS:
         gf = gamefield.copy()
-        if move(direction,gf):
+        if move(direction, gf):
             return True
     return False
 
@@ -199,38 +203,40 @@ def printDescription(hasGetch):
     print('\n')
     prettyPrint('Enter your move:')
 
-def ai(gamefield,step):
-    for direction in (["w","s","n","e"] if step%2==1 else ["s","w","n","e"]):
-    #for direction in (["w","s","n","e"] if random.random()>0.5 else ["s","w","n","e"]):
+def ai(gamefield, step):
+    # for direction in (["w","s","n","e"] if random.random()>0.5 else ["s","w","n","e"]):
+    for direction in (['r', 'd', 'u', 'l'] if step % 2 == 1 else ['d', 'r', 'u', 'l']):
         gf = gamefield.copy()
-        if move(direction,gf):
+        if move(direction, gf):
             return direction
-    return "exit"
+    return 'exit'
+
 
 if __name__ == '__main__':
-    hasAI = True if len(sys.argv)>1 else False
+    hasAI = True if len(sys.argv) > 1 else False
 
     getch = GetchWrapper()
     controls = setupControls()
-    gamefield = np.zeros((SIZE,SIZE),dtype=np.int)
-    for i in range(SIZE*SIZE//4):
+    gamefield = np.zeros((SIZE, SIZE), dtype=np.int)
+    for i in range(SIZE * SIZE // 4):
         addRandom(gamefield)
 
     step = 0
     while(True):
         clear()
         printGF(gamefield)
-        if step==0:
+        if step == 0:
             printDescription(getch.isReal)
-        step+=1
+        step += 1
         if hasAI:
-            m = ai(gamefield,step)
+            time.sleep(0.1)
+            m = ai(gamefield, step)
         else:
-            m = controls.get(getch.input(),None)
-        if move(m,gamefield):
+            m = controls.get(getch.input(), None)
+        if move(m, gamefield):
             addRandom(gamefield)
-        elif (isFull(gamefield) and not movePossible(gamefield)) or m=='exit':
+        elif (isFull(gamefield) and not movePossible(gamefield)) or m == 'exit':
             break
     prettyPrint('GAME OVER!')
     if hasAI:
-        prettyPrint(str(step)+" steps")
+        prettyPrint(str(step) + ' steps')
