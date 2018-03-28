@@ -4,6 +4,7 @@ import os
 import math
 import sys
 import time
+from collections import Counter
 
 SIZE = 4
 DIRECTIONS = ['u', 'd', 'l', 'r']
@@ -32,8 +33,8 @@ class GetchWrapper(object):
     def virtualgetch(self):
         return input()
 
-def printGF(gamefield):
-    border = '+' + ''.join([('-') for i in range(SIZE * 8 - 1)]) + '+'
+def printGF(gamefield, depth=0):
+    border = ('\t' * depth) + '+' + ''.join([('-') for i in range(SIZE * 8 - 1)]) + '+'
     mid = '|' + ''.join([('+' if i % 8 == 7 else ' ') for i in range(SIZE * 8 - 1)]) + '|'
 
     def getcol(n):
@@ -52,7 +53,7 @@ def printGF(gamefield):
                 row += ' '
             row += '\033[49m'
             row += ' ' if j < SIZE - 1 else '|'
-        print(row)
+        print('\t' * depth + row)
 
     def spacedprINT(n):
         if n == 0:
@@ -73,10 +74,10 @@ def printGF(gamefield):
         rowstr = '|'
         for j, el in enumerate(row):
             rowstr += spacedprINT(el) + (' ' if j < SIZE - 1 else '|')
-        print(rowstr)
+        print('\t' * depth + rowstr)
         printEmptyRow(row)
         if i < SIZE - 1:
-            print(mid)
+            print('\t' * depth + mid)
     print(border)
 
 def addRandom(gamefield):
@@ -203,13 +204,115 @@ def printDescription(hasGetch):
     print('\n')
     prettyPrint('Enter your move:')
 
+def heuristic(gf):
+    empties = 0
+    max_cell = np.max(gf)
+    corner_max = False
+    for i, row in enumerate(gf):
+        for j, el in enumerate(row):
+            # corner
+            if i in [0, SIZE - 1] and j in [0, SIZE - 1]:
+                if el == max_cell:
+                    corner_max = True
+            if el == 0:
+                empties += 1
+    return max_cell * (empties + 1) * (2 if corner_max else 1)
+    # return 10000 if corner_max else 1
+
+def heuristic(gf):
+    points = 0
+    cells = []
+    empty_cells = 0
+    max_cell = np.max(gf)
+    corner_max = False
+    for i in range(SIZE):
+        for j in range(SIZE):
+            cell = gf[i][j]
+            if cell == 0:
+                empty_cells += 1
+                continue
+            if i in [0, SIZE - 1] and j in [0, SIZE - 1]:
+                if cell == max_cell:
+                    corner_max = True
+            cells.append(cell)
+            neighs = []
+            for ox, oy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                x = i + ox
+                y = j + oy
+                if x < 0 or y < 0 or x >= SIZE or y >= SIZE:
+                    continue
+                neigh = gf[x][y]
+                if neigh == 0:
+                    continue
+                neighs.append(neigh)
+    for cell, count in Counter(cells).items():
+        if count == 1:
+            points += cell
+    return points * (empty_cells + 1) * (2 if corner_max else 1)
+
+def gen_children_player(gamefield):
+    for direction in ['l', 'd', 'u', 'r']:
+        gf = gamefield.copy()
+        if move(direction, gf):
+            assert not np.array_equal(gf, gamefield)
+            yield gf, direction
+
+def gen_children_computer(gamefield):
+    possPos = []
+    for i, row in enumerate(gamefield):
+        for j, el in enumerate(row):
+            if el == 0:
+                possPos.append([i, j])
+
+    for cell in [2, 4]:
+        for i, j in possPos:
+            gf = gamefield.copy()
+            gf[i][j] = cell
+            if cell == 2:
+                probability = 0.9 / len(possPos)
+            if cell == 4:
+                probability = 0.1 / len(possPos)
+            yield gf, probability
+
+def minimax(gf, depth, player):
+    # printGF(gf, max_depth - depth)
+    if depth == 0 or not movePossible(gamefield):
+        h = heuristic(gf)
+        # print('\t' * (max_depth - depth), 'heuristic', h)
+        return h, None
+
+    if player:
+        bestval = -10**10
+        best_m = None
+        for child, m in gen_children_player(gf):
+            # print('\t' * (max_depth - depth + 1), 'player', m)
+            v, _ = minimax(child, depth - 1, False)
+            if v > bestval:
+                bestval = max(bestval, v)
+                best_m = m
+        return bestval, best_m
+    else:
+        a = 0
+        for child, prob in gen_children_computer(gf):
+            v, _ = minimax(child, depth - 1, True)
+            a += v * prob
+            # print('\t' * (max_depth - depth + 1), 'computer', a)
+        return a, None
+
+
+max_depth = 4
 def ai(gamefield, step):
+    '''
     # for direction in (["w","s","n","e"] if random.random()>0.5 else ["s","w","n","e"]):
-    for direction in (['r', 'd', 'u', 'l'] if step % 2 == 1 else ['d', 'r', 'u', 'l']):
+    for direction in (['l', 'd', 'u', 'r'] if step % 2 == 1 else ['d', 'l', 'u', 'r']):
         gf = gamefield.copy()
         if move(direction, gf):
             return direction
     return 'exit'
+    '''
+    # print('#' * 80, 'Start')
+    v, m = minimax(gamefield.copy(), max_depth, True)
+    return m
 
 
 if __name__ == '__main__':
@@ -221,18 +324,29 @@ if __name__ == '__main__':
     for i in range(SIZE * SIZE // 4):
         addRandom(gamefield)
 
+    '''
+    printGF(gamefield)
+    for child, m in gen_children_player(gamefield):
+        print('child', m)
+        printGF(child)
+    print(np.max(gamefield))
+    '''
+
     step = 0
     while(True):
-        clear()
+        if not hasAI:
+            # clear()
+            pass
         printGF(gamefield)
         if step == 0:
             printDescription(getch.isReal)
         step += 1
         if hasAI:
-            time.sleep(0.1)
+            # time.sleep(0.1)
             m = ai(gamefield, step)
         else:
             m = controls.get(getch.input(), None)
+        print(m)
         if move(m, gamefield):
             addRandom(gamefield)
         elif (isFull(gamefield) and not movePossible(gamefield)) or m == 'exit':
