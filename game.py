@@ -4,7 +4,7 @@ import os
 import math
 import sys
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 
 SIZE = 4
 DIRECTIONS = ['u', 'd', 'r', 'l']
@@ -250,6 +250,69 @@ def heuristic(gf):
             points += cell
     return points * (empty_cells + 1) * (2 if corner_max else 1)
 
+def longest_path(node, graph, path):
+    if node not in graph:
+        return path
+
+    max_path = []
+    for child in graph[node]:
+        if child in path:
+            continue
+        child_path = longest_path(child, graph, path + [child])
+        if len(child_path) > len(max_path):
+            max_path = child_path
+    return max_path
+
+def heuristic(gf):
+    max_val = np.max(gf)
+    graph = defaultdict(set)
+    starts = set()
+    empties = 1
+    for i in range(SIZE):
+        for j in range(SIZE):
+            cell = gf[i][j]
+            if cell == 0:
+                empties+=1
+                continue
+            if cell == max_val:
+                starts.add((i,j))
+            for ox, oy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                x = i + ox
+                y = j + oy
+                if x < 0 or y < 0 or x >= SIZE or y >= SIZE:
+                    continue
+                neigh = gf[x][y]
+                if neigh <= cell and neigh > 0:
+                    graph[(i,j)].add((x,y))
+    max_path = []
+    for start in starts:
+        path = longest_path(start, graph, [start])
+        if len(path) > len(max_path):
+            max_path = path
+    if len(max_path):
+        max_corner = max_path[0][0] in [0, SIZE - 1] and max_path[0][1] in [0, SIZE - 1]
+    else:
+        max_corner = False
+    score = 0
+    for i,j in max_path:
+        score += gf[i][j]
+    score -= len(max_path)
+    for i in range(SIZE):
+        for j in range(SIZE):
+            if (i,j) not in max_path:
+                score -= gf[i][j]
+    '''
+    print(gf)
+    print(graph)
+    print(starts)
+    print(max_path)
+    print(score)
+    '''
+    if score > 0:
+        return score * empties * (100 if max_corner else 1)
+    else:
+        return score
+
 def gen_children_player(gamefield):
     for direction in ['l', 'd', 'u', 'r']:
         gf = gamefield.copy()
@@ -342,7 +405,6 @@ if __name__ == '__main__':
             printDescription(getch.isReal)
         step += 1
         if hasAI:
-            # time.sleep(0.1)
             m = ai(gamefield, step)
         else:
             m = controls.get(getch.input(), None)
