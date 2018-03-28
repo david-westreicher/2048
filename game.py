@@ -7,7 +7,7 @@ import time
 from collections import Counter
 
 SIZE = 4
-DIRECTIONS = ['u', 'd', 'l', 'r']
+DIRECTIONS = ['u', 'd', 'r', 'l']
 
 class GetchWrapper(object):
     def __init__(self):
@@ -101,11 +101,11 @@ def move(direction, gamefield):
             for i in range(SIZE):
                 for j in range(SIZE):
                     tmpfield[i][SIZE - j - 1] = gf[i][j]
-        elif(direction == 'l'):
+        elif(direction == 'r'):
             for i in range(SIZE):
                 for j in range(SIZE):
                     tmpfield[SIZE - i - 1][SIZE - j - 1] = gf.T[i][j]
-        elif(direction == 'r'):
+        elif(direction == 'l'):
             tmpfield = gf.T.copy()
         return tmpfield
 
@@ -160,10 +160,10 @@ def prettyPrint(text):
 
 def setupControls():
     dic = {}
-    dic['u'] = ['r', 'A', 'k']
-    dic['d'] = ['d', 'B', 'j']
-    dic['l'] = ['d', 'C', 'l']
-    dic['r'] = ['a', 'D', 'h']
+    dic['u'] = ['w', 'A', 'k']
+    dic['d'] = ['s', 'B', 'j']
+    dic['r'] = ['d', 'C', 'l']
+    dic['l'] = ['a', 'D', 'h']
     dic['exit'] = ['q', 'Q', '\033']
     revDic = {}
     for el in dic:
